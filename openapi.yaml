@@ -2,10 +2,9 @@ openapi: 3.0.3
 info:
   title: Home Energy API
   description: |
-    Secure bridge between a frontend dashboard and Home Assistant.
-    This API proxies energy data from Home Assistant, enforcing entity allowlists
-    and API key authentication.
-  version: 1.0.1
+    Family-friendly energy dashboard API. Provides real-time insights into home
+    energy usage, costs, EV charging, heating, and environmental impact.
+  version: 2.0.0
   contact:
     name: API Support
 
@@ -19,10 +18,8 @@ paths:
   /health:
     get:
       summary: Health check
-      description: Returns the health status of the API
       operationId: getHealth
-      tags:
-        - Health
+      tags: [Health]
       responses:
         '200':
           description: Service is healthy
@@ -30,104 +27,227 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
-              example:
-                ok: true
 
-  /api/energy/summary:
+  /api/energy/live:
     get:
-      summary: Get current energy summary
+      summary: Live energy snapshot
       description: |
-        Returns a snapshot of current power readings, today's energy usage,
-        and current tariff information.
-      operationId: getEnergySummary
-      tags:
-        - Energy
+        Real-time view of home energy - what the family sees at a glance.
+        Updates every 30 seconds.
+      operationId: getLiveEnergy
+      tags: [Energy]
       security:
         - ApiKeyAuth: []
       responses:
         '200':
-          description: Energy summary data
+          description: Current energy state
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySummary'
-              example:
-                now:
-                  import_w: 450
-                  solar_w: 2850
-                  house_w: 1200
-                  car_charging: false
-                today:
-                  kwh: 12.4
-                  cost_gbp: 2.85
-                tariff:
-                  window: peak
-                  unit_rate_p: 24.5
+                $ref: '#/components/schemas/LiveEnergy'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/energy/today:
+    get:
+      summary: Today's energy summary
+      description: |
+        Running totals for today - consumption, costs, and comparisons.
+      operationId: getTodayEnergy
+      tags: [Energy]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Today's energy data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodayEnergy'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/energy/tariff:
+    get:
+      summary: Current tariff and upcoming rates
+      description: |
+        Shows current electricity and gas rates, plus what's coming up.
+        Helps the family know when to run appliances.
+      operationId: getTariff
+      tags: [Energy]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Tariff information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TariffInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/car:
+    get:
+      summary: EV charging status
+      description: |
+        Current state of the electric car - charging status, when it'll be ready,
+        and smart charging schedule.
+      operationId: getCarStatus
+      tags: [Car]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Car charging status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/green:
+    get:
+      summary: Green energy status
+      description: |
+        How green is our energy right now? Shows grid carbon intensity
+        and renewable percentage.
+      operationId: getGreenStatus
+      tags: [Green]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Green energy metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GreenStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/heating:
+    get:
+      summary: Heating overview
+      description: |
+        Current heating status across the house - temperatures, which zones
+        are calling for heat, and eco mode status.
+      operationId: getHeatingStatus
+      tags: [Heating]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Heating status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatingStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/appliances:
+    get:
+      summary: Major appliance status
+      description: |
+        Power consumption of major appliances - useful for knowing if the
+        washing machine has finished or if something's been left on.
+      operationId: getApplianceStatus
+      tags: [Appliances]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Appliance power status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplianceStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
+  /api/octopus:
+    get:
+      summary: Octopus account perks
+      description: |
+        OctoPlus points, Wheel of Fortune spins, and saving sessions.
+      operationId: getOctopusPerks
+      tags: [Octopus]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Octopus account perks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OctopusPerks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '502':
           $ref: '#/components/responses/BadGateway'
 
   /api/energy/timeseries:
     get:
-      summary: Get historical timeseries data
+      summary: Historical data
       description: |
-        Returns historical data points for a specific entity over the requested
-        time range, resampled to the requested interval.
-      operationId: getEnergyTimeseries
-      tags:
-        - Energy
+        Time-series data for charts - electricity demand, costs, temperatures.
+      operationId: getTimeseries
+      tags: [Energy]
       security:
         - ApiKeyAuth: []
       parameters:
-        - name: entity_id
+        - name: metric
           in: query
           required: true
-          description: Home Assistant entity ID (must be in ALLOWED_ENTITIES)
           schema:
             type: string
-          example: sensor.grid_import_power
+            enum:
+              - electricity_demand
+              - electricity_cost
+              - electricity_rate
+              - gas_consumption
+              - gas_cost
+              - carbon_intensity
+          description: Which metric to fetch
         - name: range
           in: query
-          required: false
-          description: Time range to fetch
           schema:
             type: string
             enum: ['1h', '6h', '12h', '24h', '7d']
             default: '24h'
         - name: interval
           in: query
-          required: false
-          description: Data point interval
           schema:
             type: string
-            enum: ['1m', '5m', '15m', '30m', '1h']
-            default: '5m'
+            enum: ['5m', '15m', '30m', '1h']
+            default: '30m'
       responses:
         '200':
-          description: Timeseries data points
+          description: Time-series data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimeseriesResponse'
-              example:
-                metric: Grid Import
-                unit: W
-                points:
-                  - t: '2024-01-15T10:00:00.000Z'
-                    v: 450
-                  - t: '2024-01-15T10:05:00.000Z'
-                    v: 480
-                  - t: '2024-01-15T10:10:00.000Z'
-                    v: 420
+                $ref: '#/components/schemas/Timeseries'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '502':
           $ref: '#/components/responses/BadGateway'
 
@@ -137,128 +257,339 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: Dashboard API key for authentication
 
   schemas:
     HealthResponse:
       type: object
-      required:
-        - ok
+      required: [ok]
       properties:
         ok:
           type: boolean
-          description: Whether the service is healthy
 
-    EnergySummary:
+    LiveEnergy:
       type: object
-      required:
-        - now
-        - today
-        - tariff
+      required: [electricity, gas, timestamp]
       properties:
-        now:
+        electricity:
           type: object
-          required:
-            - import_w
-            - solar_w
-            - house_w
-            - car_charging
+          required: [demand_w, rate_p, is_off_peak]
           properties:
-            import_w:
+            demand_w:
               type: number
-              description: Current grid import power in watts
-            solar_w:
+              description: Current power draw in watts
+              example: 1250
+            rate_p:
               type: number
-              description: Current solar generation in watts
-            house_w:
-              type: number
-              description: Current house consumption in watts
-            car_charging:
+              description: Current rate in pence per kWh
+              example: 24.5
+            is_off_peak:
               type: boolean
-              description: Whether the car charger is active
-        today:
+              description: Whether we're in off-peak pricing
+              example: false
+            rate_name:
+              type: string
+              description: Human-readable rate period
+              example: "Peak"
+        gas:
           type: object
-          required:
-            - kwh
-            - cost_gbp
+          required: [rate_p]
+          properties:
+            rate_p:
+              type: number
+              description: Current gas rate in pence per kWh
+              example: 7.5
+        timestamp:
+          type: string
+          format: date-time
+
+    TodayEnergy:
+      type: object
+      required: [electricity, gas, total_cost_gbp]
+      properties:
+        electricity:
+          type: object
+          required: [kwh, cost_gbp]
           properties:
             kwh:
               type: number
-              description: Total energy consumed today in kWh
+              example: 12.4
             cost_gbp:
               type: number
-              description: Total cost today in GBP
-        tariff:
+              example: 2.85
+        gas:
           type: object
-          required:
-            - window
-            - unit_rate_p
+          required: [kwh, m3, cost_gbp]
           properties:
-            window:
-              type: string
-              enum:
-                - peak
-                - offpeak
-              description: Current tariff window
-            unit_rate_p:
+            kwh:
               type: number
-              description: Current unit rate in pence per kWh
+              example: 25.6
+            m3:
+              type: number
+              example: 2.3
+            cost_gbp:
+              type: number
+              example: 1.92
+        total_cost_gbp:
+          type: number
+          description: Combined electricity + gas cost
+          example: 4.77
+        standing_charges_gbp:
+          type: number
+          description: Daily standing charges (elec + gas)
+          example: 0.68
 
-    TimeseriesResponse:
+    TariffInfo:
       type: object
-      required:
-        - metric
-        - unit
-        - points
+      required: [electricity, gas]
+      properties:
+        electricity:
+          type: object
+          required: [current, upcoming]
+          properties:
+            current:
+              $ref: '#/components/schemas/RatePeriod'
+            previous:
+              $ref: '#/components/schemas/RatePeriod'
+            upcoming:
+              type: array
+              items:
+                $ref: '#/components/schemas/RatePeriod'
+              maxItems: 6
+        gas:
+          type: object
+          required: [current]
+          properties:
+            current:
+              $ref: '#/components/schemas/RatePeriod'
+
+    RatePeriod:
+      type: object
+      required: [rate_p, valid_from]
+      properties:
+        rate_p:
+          type: number
+          example: 7.5
+        valid_from:
+          type: string
+          format: date-time
+        valid_to:
+          type: string
+          format: date-time
+        is_off_peak:
+          type: boolean
+
+    CarStatus:
+      type: object
+      required: [state, smart_charging_enabled]
+      properties:
+        state:
+          type: string
+          description: Current charging state
+          enum: [unplugged, plugged_in, charging, complete, scheduled]
+          example: charging
+        is_charging:
+          type: boolean
+          description: Whether actively charging right now
+          example: true
+        charge_target_pct:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Target charge level
+          example: 80
+        ready_by:
+          type: string
+          description: When the car will be ready (HH:MM format)
+          example: "07:00"
+        smart_charging_enabled:
+          type: boolean
+          description: Whether Octopus Intelligent is managing charging
+          example: true
+        can_bump_charge:
+          type: boolean
+          description: Whether bump charge is available
+          example: true
+
+    GreenStatus:
+      type: object
+      required: [carbon_intensity, renewable_pct, rating]
+      properties:
+        carbon_intensity:
+          type: integer
+          description: Grid carbon intensity in gCO2/kWh
+          example: 185
+        fossil_fuel_pct:
+          type: number
+          description: Percentage of grid from fossil fuels
+          example: 42.5
+        renewable_pct:
+          type: number
+          description: Percentage from renewables (100 - fossil)
+          example: 57.5
+        rating:
+          type: string
+          enum: [very_green, green, moderate, dirty, very_dirty]
+          description: Simple rating for the family
+          example: green
+
+    HeatingStatus:
+      type: object
+      required: [zones, eco_mode, hot_water]
+      properties:
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeatingZone'
+        eco_mode:
+          type: object
+          properties:
+            active:
+              type: boolean
+              example: true
+            reason:
+              type: string
+              example: "Weekday daytime - family away"
+        holiday_mode:
+          type: object
+          properties:
+            active:
+              type: boolean
+              example: false
+        hot_water:
+          type: object
+          required: [on]
+          properties:
+            on:
+              type: boolean
+              example: true
+            boost_active:
+              type: boolean
+              example: false
+        outdoor_temp_c:
+          type: number
+          example: 8.5
+        heating_demand:
+          type: boolean
+          description: Whether any zone is calling for heat
+          example: true
+
+    HeatingZone:
+      type: object
+      required: [name, current_c, target_c]
+      properties:
+        name:
+          type: string
+          example: "Kitchen"
+        current_c:
+          type: number
+          example: 19.5
+        target_c:
+          type: number
+          example: 20.0
+        calling_for_heat:
+          type: boolean
+          example: true
+        type:
+          type: string
+          enum: [underfloor, radiator]
+          example: underfloor
+
+    ApplianceStatus:
+      type: object
+      required: [appliances]
+      properties:
+        appliances:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appliance'
+        total_w:
+          type: number
+          description: Combined power draw of monitored appliances
+          example: 156
+
+    Appliance:
+      type: object
+      required: [name, power_w, state]
+      properties:
+        name:
+          type: string
+          example: "Washing Machine"
+        power_w:
+          type: number
+          example: 5
+        state:
+          type: string
+          enum: [off, idle, running]
+          example: off
+        energy_today_kwh:
+          type: number
+          example: 1.2
+
+    OctopusPerks:
+      type: object
+      properties:
+        octoplus_points:
+          type: integer
+          description: OctoPlus loyalty points balance
+          example: 2450
+        wheel_of_fortune:
+          type: object
+          properties:
+            electricity_spins:
+              type: integer
+              example: 2
+            gas_spins:
+              type: integer
+              example: 1
+        saving_session:
+          type: object
+          properties:
+            active:
+              type: boolean
+              example: false
+            next_event:
+              type: string
+              format: date-time
+              nullable: true
+
+    Timeseries:
+      type: object
+      required: [metric, unit, points]
       properties:
         metric:
           type: string
-          description: Human-readable metric name
+          example: "Electricity Demand"
         unit:
           type: string
-          description: Unit of measurement
+          example: "W"
         points:
           type: array
           items:
-            $ref: '#/components/schemas/TimeseriesPoint'
-
-    TimeseriesPoint:
-      type: object
-      required:
-        - t
-        - v
-      properties:
-        t:
-          type: string
-          format: date-time
-          description: Timestamp in ISO8601 format
-        v:
-          type: number
-          description: Value at this timestamp
+            type: object
+            required: [t, v]
+            properties:
+              t:
+                type: string
+                format: date-time
+              v:
+                type: number
 
     ErrorResponse:
       type: object
-      required:
-        - error
-        - message
+      required: [error, message]
       properties:
         error:
           type: string
-          description: Error type
         message:
           type: string
-          description: Human-readable error message
 
   responses:
     BadRequest:
-      description: Invalid request parameters
+      description: Invalid request
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: Bad Request
-            message: Invalid query parameters
 
     Unauthorized:
       description: Missing API key
@@ -266,19 +597,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: Unauthorized
-            message: Missing X-API-Key header
-
-    Forbidden:
-      description: Invalid API key or entity not allowed
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: Forbidden
-            message: Invalid API key
 
     BadGateway:
       description: Failed to communicate with Home Assistant
@@ -286,12 +604,19 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: Bad Gateway
-            message: Failed to fetch data from Home Assistant
 
 tags:
   - name: Health
-    description: Health check endpoints
+    description: Service health
   - name: Energy
-    description: Energy data endpoints
+    description: Energy consumption and costs
+  - name: Car
+    description: EV charging status
+  - name: Green
+    description: Environmental impact
+  - name: Heating
+    description: Home heating status
+  - name: Appliances
+    description: Major appliance monitoring
+  - name: Octopus
+    description: Octopus Energy account perks
