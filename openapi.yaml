@@ -5,7 +5,7 @@ info:
     Secure bridge between a frontend dashboard and Home Assistant.
     This API proxies energy data from Home Assistant, enforcing entity allowlists
     and API key authentication.
-  version: 1.0.0
+  version: 1.0.1
   contact:
     name: API Support
 
