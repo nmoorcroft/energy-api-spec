@@ -9,6 +9,8 @@ info:
     name: API Support
 
 servers:
+  - url: http://energy.darktrain.co.uk
+    description: Production server (LAN/VPN access)
   - url: http://localhost:3000
     description: Local development server
 
