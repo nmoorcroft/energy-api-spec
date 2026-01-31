@@ -10,7 +10,9 @@ info:
 
 servers:
   - url: https://energy.darktrain.co.uk
-    description: Production server
+    description: Production server (LAN/VPN access)
+  - url: http://localhost:3000
+    description: Local development server
 
 security: []
 
@@ -374,6 +376,34 @@ components:
               items:
                 $ref: '#/components/schemas/RatePeriod'
               maxItems: 6
+            off_peak_window:
+              type: object
+              description: Off-peak time windows from Octopus Intelligent
+              properties:
+                current:
+                  type: object
+                  description: Current off-peak window (only present when in off-peak)
+                  properties:
+                    start:
+                      type: string
+                      format: date-time
+                      example: "2026-01-31T23:30:00+00:00"
+                    end:
+                      type: string
+                      format: date-time
+                      example: "2026-02-01T05:30:00+00:00"
+                next:
+                  type: object
+                  description: Next scheduled off-peak window
+                  properties:
+                    start:
+                      type: string
+                      format: date-time
+                      example: "2026-01-31T23:30:00+00:00"
+                    end:
+                      type: string
+                      format: date-time
+                      example: "2026-02-01T05:30:00+00:00"
         gas:
           type: object
           required: [current]
