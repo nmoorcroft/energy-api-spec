@@ -10,9 +10,7 @@ info:
 
 servers:
   - url: https://energy.darktrain.co.uk
-    description: Production server (LAN/VPN access)
-  - url: http://localhost:3000
-    description: Local development server
+    description: Production server
 
 security: []
 
