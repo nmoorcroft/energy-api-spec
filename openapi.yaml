@@ -199,6 +199,40 @@ paths:
         '502':
           $ref: '#/components/responses/BadGateway'
 
+  /api/energy/distribution:
+    get:
+      summary: Peak/off-peak breakdown
+      description: |
+        Electricity consumption and cost breakdown by peak vs off-peak tariff periods.
+        Uses Home Assistant's long-term statistics database for historical accuracy.
+      operationId: getEnergyDistribution
+      tags: [Energy]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: days
+          in: query
+          description: Number of days to retrieve (max 365, default 7)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 7
+            example: 7
+      responses:
+        '200':
+          description: Peak/off-peak energy distribution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnergyDistribution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -484,3 +518,96 @@ components:
               source:
                 type: string
                 description: Source of the schedule (e.g., "smart-charge")
+
+    EnergyDistribution:
+      type: object
+      required: [period, summary, daily]
+      properties:
+        period:
+          type: object
+          required: [days, start_date, end_date]
+          properties:
+            days:
+              type: integer
+              description: Number of days in the period
+              example: 7
+            start_date:
+              type: string
+              format: date
+              description: Start date of the period
+              example: "2026-01-24"
+            end_date:
+              type: string
+              format: date
+              description: End date of the period
+              example: "2026-01-31"
+        summary:
+          type: object
+          required: [peak_kwh, off_peak_kwh, peak_cost, off_peak_cost, total_kwh, total_cost, off_peak_pct]
+          properties:
+            peak_kwh:
+              type: number
+              description: Total peak electricity consumption in kWh
+              example: 142.36
+            off_peak_kwh:
+              type: number
+              description: Total off-peak electricity consumption in kWh
+              example: 87.62
+            peak_cost:
+              type: number
+              description: Total peak electricity cost in GBP
+              example: 35.59
+            off_peak_cost:
+              type: number
+              description: Total off-peak electricity cost in GBP
+              example: 6.57
+            total_kwh:
+              type: number
+              description: Total electricity consumption in kWh
+              example: 229.98
+            total_cost:
+              type: number
+              description: Total electricity cost in GBP
+              example: 42.16
+            off_peak_pct:
+              type: number
+              description: Percentage of consumption during off-peak
+              example: 38.1
+        daily:
+          type: array
+          description: Daily breakdown of peak/off-peak consumption
+          items:
+            $ref: '#/components/schemas/DailyDistribution'
+
+    DailyDistribution:
+      type: object
+      required: [date, peak_kwh, off_peak_kwh, peak_cost, off_peak_cost, total_kwh, total_cost]
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2026-01-31"
+        peak_kwh:
+          type: number
+          description: Peak electricity consumption in kWh
+          example: 20.28
+        off_peak_kwh:
+          type: number
+          description: Off-peak electricity consumption in kWh
+          example: 6.59
+        peak_cost:
+          type: number
+          description: Peak electricity cost in GBP
+          example: 5.07
+        off_peak_cost:
+          type: number
+          description: Off-peak electricity cost in GBP
+          example: 0.49
+        total_kwh:
+          type: number
+          description: Total electricity consumption in kWh
+          example: 26.87
+        total_cost:
+          type: number
+          description: Total electricity cost in GBP
+          example: 5.56
