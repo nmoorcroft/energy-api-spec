@@ -291,16 +291,65 @@ components:
 
     LiveEnergy:
       type: object
-      required: [demand_kw, is_off_peak, timestamp]
+      required: [demand_kw, demand_status, low_carbon_kw, is_off_peak, grid, active_devices, timestamp]
       properties:
         demand_kw:
           type: number
           description: Current power demand in kilowatts
           example: 1.25
+        demand_status:
+          type: string
+          enum: [excellent, good, normal, high, very_high]
+          description: Demand status based on benchmarks (≤300W=excellent, ≤500W=good, ≤1500W=normal, ≤3000W=high, >3000W=very_high)
+          example: normal
+        low_carbon_kw:
+          type: number
+          description: Low-carbon portion of current demand in kilowatts
+          example: 0.85
         is_off_peak:
           type: boolean
           description: Whether currently in off-peak tariff period
           example: false
+        grid:
+          type: object
+          required: [low_carbon_pct, fossil_fuel_pct, co2_intensity]
+          properties:
+            low_carbon_pct:
+              type: number
+              description: Percentage of low-carbon sources on the grid
+              example: 68.2
+            fossil_fuel_pct:
+              type: number
+              description: Percentage of fossil fuel sources on the grid
+              example: 31.8
+            co2_intensity:
+              type: number
+              description: Grid CO2 intensity in gCO2/kWh
+              example: 145
+        active_devices:
+          type: object
+          required: [gas, electric, gas_summary, electric_summary]
+          properties:
+            gas:
+              type: array
+              description: List of gas-powered devices currently active
+              items:
+                type: string
+              example: ["Kitchen Floor", "Study Floor", "Hot Water Schedule"]
+            electric:
+              type: array
+              description: List of electric devices currently active
+              items:
+                type: string
+              example: ["Master Bathroom Floor", "Washing Machine"]
+            gas_summary:
+              type: string
+              description: Human-readable summary of active gas devices
+              example: "Kitchen & Study floor, Hot water"
+            electric_summary:
+              type: string
+              description: Human-readable summary of active electric devices
+              example: "Master bathroom, Washing"
         timestamp:
           type: string
           format: date-time
